@@ -39,3 +39,24 @@ create policy "own generated cvs" on public.generated_cvs
   for all to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Growth Plans: one plan per CV analysis; completed_tasks holds the checked task ids.
+create table if not exists public.learning_plans (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  analysis_id      uuid not null unique references public.cv_analyses (id) on delete cascade,
+  inputs           jsonb not null,
+  plan             jsonb not null,
+  completed_tasks  text[] not null default '{}',
+  created_at       timestamptz not null default now()
+);
+
+create index if not exists learning_plans_user_created_idx on public.learning_plans (user_id, created_at desc);
+
+alter table public.learning_plans enable row level security;
+
+drop policy if exists "own learning plans" on public.learning_plans;
+create policy "own learning plans" on public.learning_plans
+  for all to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);

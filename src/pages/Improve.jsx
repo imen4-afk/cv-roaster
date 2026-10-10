@@ -5,7 +5,7 @@ import { askGeminiJSON, friendlyError } from '../lib/gemini'
 import { roastPrompt, validateRoast } from '../lib/prompts'
 import { supabase } from '../lib/supabase'
 import { SAMPLE_CVS } from '../lib/samples'
-import AnalysisResult from '../components/AnalysisResult'
+import AnalysisResult, { GrowthPlanCta } from '../components/AnalysisResult'
 import ErrorBox from '../components/ErrorBox'
 import { LoadingPanel } from '../components/Spinner'
 
@@ -20,6 +20,7 @@ export default function Improve() {
   const [error, setError] = useState('')
   const [saveError, setSaveError] = useState('')
   const [result, setResult] = useState(null)
+  const [analysisId, setAnalysisId] = useState(null)
   const resultRef = useRef(null)
 
   // Clear router state so a refresh doesn't re-prefill after the user edits.
@@ -59,18 +60,24 @@ export default function Improve() {
     setError('')
     setSaveError('')
     setResult(null)
+    setAnalysisId(null)
     try {
       const res = await askGeminiJSON(roastPrompt(cvText, job), validateRoast)
       setResult(res)
-      const { error: dbError } = await supabase.from('cv_analyses').insert({
-        user_id: user.id,
-        cv_text: cvText,
-        job_description: job.trim() || null,
-        score: res.score,
-        verdict: res.verdict,
-        result: res,
-      })
+      const { data: saved, error: dbError } = await supabase
+        .from('cv_analyses')
+        .insert({
+          user_id: user.id,
+          cv_text: cvText,
+          job_description: job.trim() || null,
+          score: res.score,
+          verdict: res.verdict,
+          result: res,
+        })
+        .select('id')
+        .single()
       if (dbError) setSaveError(`Result shown but not saved to your history: ${dbError.message}`)
+      else setAnalysisId(saved?.id ?? null)
     } catch (err) {
       setError(friendlyError(err))
     } finally {
@@ -146,6 +153,7 @@ export default function Improve() {
           <>
             {saveError && <p className="mb-4 text-sm text-amber-400">{saveError}</p>}
             <AnalysisResult result={result} />
+            <GrowthPlanCta analysisId={analysisId} />
           </>
         )}
       </div>

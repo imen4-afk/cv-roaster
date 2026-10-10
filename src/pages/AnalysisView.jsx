@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { validateRoast } from '../lib/prompts'
-import AnalysisResult from '../components/AnalysisResult'
+import AnalysisResult, { GrowthPlanCta } from '../components/AnalysisResult'
 import ErrorBox from '../components/ErrorBox'
 import Spinner from '../components/Spinner'
 
@@ -46,6 +46,7 @@ export default function AnalysisView() {
         </pre>
       )}
       <AnalysisResult result={validateRoast(row.result)} />
+      <GrowthPlanCta analysisId={row.id} />
     </div>
   )
 }

@@ -17,6 +17,14 @@ Get your CV roasted by AI (score, blunt feedback, ATS mismatch analysis, missing
 
   The **Try an example** button loads one of two sample CVs (one weak, one decent).
 - **`/generate`:** a chat with an AI career coach that answers in English, French or Arabic and shows a progress bar of the topics covered. When it has enough information, it writes a one-page CV that you can **Download as PDF** (using the browser's print dialog) or **Roast**.
+- **`/plan/:analysisId` (Growth Plan):** after a roast, click **Build my Growth Plan**, answer a short form (target role, hours per week, plan length, learning style, budget, resource language), and get:
+  - quick wins you can apply to your CV today
+  - your weak points, sorted by severity, each quoting evidence from your CV
+  - a step-by-step pathway, with the CV line you'll be able to add after each step
+  - a week-by-week schedule of tasks to check off, each with a resource link and a Free or Paid badge
+  - milestone projects, with a CV bullet you can copy
+
+  Progress is saved as you check tasks. You can export the schedule to your calendar (`.ics`) or print it. Resource links are built by the app from a platform name and a search query; links written by the AI are never used.
 - Every result is saved to Supabase and can be reopened from the dashboard.
 - If a Gemini call fails or returns invalid JSON, the app retries once automatically and then shows a friendly error message.
 
@@ -33,7 +41,7 @@ Requires Node 20.19+ (or 22.12+).
 ### 2. Supabase
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. Go to **SQL Editor → New query**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql), and click **Run**. This creates the `cv_analyses` and `generated_cvs` tables with row-level security, so each user only sees their own data.
+2. Go to **SQL Editor → New query**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql), and click **Run**. This creates the `cv_analyses`, `generated_cvs` and `learning_plans` tables with row-level security, so each user only sees their own data.
 3. Go to **Project Settings → API** and copy the **Project URL** and the **anon public** key.
 4. **Required:** go to **Authentication → Sign In / Providers → Email**, turn off **Confirm email**, and save. The app signs users in with just their email and password, without a confirmation email. If this setting stays on, sign-up shows a message asking you to turn it off.
 
@@ -81,9 +89,12 @@ src/
     topics.js       topic detection for the chat progress bar (EN/FR/AR)
     cvText.js       CV JSON -> plain text (for "Roast this CV")
     samples.js      the two "Try an example" CVs
+    planPrompt.js   Growth Plan prompt, validator and progress helpers
+    resourceLinks.js  platform + search query -> safe search URL
+    ics.js          calendar (.ics) export
   context/AuthContext.jsx
-  components/       Navbar, ProtectedRoute, ScoreGauge, AnalysisResult, CvTemplate, CvActions, Spinner, ErrorBox
-  pages/            Login, Dashboard, Improve, Generate, AnalysisView, CvView
+  components/       Navbar, ProtectedRoute, ScoreGauge, AnalysisResult, CvTemplate, CvActions, GrowthPlan, PlanForm, Toast, Spinner, ErrorBox
+  pages/            Login, Dashboard, Improve, Generate, AnalysisView, CvView, Plan
 supabase/schema.sql
 ```
 

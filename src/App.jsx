@@ -7,6 +7,7 @@ import Improve from './pages/Improve'
 import Generate from './pages/Generate'
 import AnalysisView from './pages/AnalysisView'
 import CvView from './pages/CvView'
+import Plan from './pages/Plan'
 import { MISSING_ENV_MESSAGE, missingSupabaseEnv, supabaseConfigured } from './lib/supabase'
 
 function MissingEnv() {
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/generate" element={<Generate />} />
             <Route path="/analysis/:id" element={<AnalysisView />} />
             <Route path="/cv/:id" element={<CvView />} />
+            <Route path="/plan/:analysisId" element={<Plan />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

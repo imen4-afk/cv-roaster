@@ -1,5 +1,26 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import ScoreGauge from './ScoreGauge'
+
+// Big call-to-action under the roast. A plan needs a saved analysis to attach to.
+export function GrowthPlanCta({ analysisId }) {
+  return (
+    <div className="card fade-up mt-8 flex flex-col items-center gap-4 border-fire-500/30 p-6 text-center sm:p-8">
+      <div className="text-4xl">🌱</div>
+      <div>
+        <h2 className="text-xl font-bold sm:text-2xl">Now let's fix it, step by step</h2>
+        <p className="mt-1 text-neutral-400">Turn this roast into a week-by-week plan with free resources and CV-ready projects.</p>
+      </div>
+      {analysisId ? (
+        <Link to={`/plan/${analysisId}`} className="btn-fire w-full px-8 py-4 text-lg sm:w-auto">
+          🚀 Build my Growth Plan
+        </Link>
+      ) : (
+        <p className="text-sm text-amber-400">The roast must be saved to your history before you can build a plan.</p>
+      )}
+    </div>
+  )
+}
 
 function Section({ title, icon, children, delay = 0 }) {
   return (

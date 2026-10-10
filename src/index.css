@@ -108,4 +108,32 @@ body {
   .avoid-break {
     break-inside: avoid;
   }
+
+  /* Growth Plan: light, ink-friendly cards and every week expanded */
+  .plan-page .card,
+  .plan-page .card * {
+    background: #fff !important;
+    border-color: #d4d4d4 !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  .plan-page * {
+    color: #111 !important;
+    text-shadow: none !important;
+  }
+  .plan-page .card .print-track {
+    background: #e5e5e5 !important;
+  }
+  .plan-page .card .print-bar {
+    background: #f97316 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .plan-page .fade-up {
+    animation: none !important;
+  }
+  .plan-page .print-expand {
+    grid-template-rows: 1fr !important;
+    opacity: 1 !important;
+  }
 }

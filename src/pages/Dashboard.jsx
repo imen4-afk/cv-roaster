@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { planProgress, validatePlan } from '../lib/planPrompt'
 import { scoreColor } from '../components/ScoreGauge'
 import Spinner from '../components/Spinner'
 import ErrorBox from '../components/ErrorBox'
@@ -23,10 +24,28 @@ function BigCard({ to, emoji, title, text }) {
   )
 }
 
+const safeProgress = (p) => {
+  try {
+    return planProgress(validatePlan(p.plan), p.completed_tasks || [])
+  } catch {
+    return 0
+  }
+}
+
 export default function Dashboard() {
   const { user } = useAuth()
   const [items, setItems] = useState(null)
+  const [plans, setPlans] = useState(null)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    supabase
+      .from('learning_plans')
+      .select('id, analysis_id, inputs, plan, completed_tasks, created_at')
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data, error }) => setPlans(error ? [] : data))
+  }, [])
 
   useEffect(() => {
     Promise.all([
@@ -57,6 +76,36 @@ export default function Dashboard() {
         <BigCard to="/improve" emoji="🔥" title="Roast & Improve my CV" text="Get a score, a brutally honest roast, and concrete fixes for your existing CV." />
         <BigCard to="/generate" emoji="💬" title="I don't have a CV, build one with me" text="Chat with an AI career coach and get a clean, professional one-page CV." />
       </div>
+
+      {plans?.length > 0 && (
+        <section className="fade-up">
+          <h2 className="mb-3 text-lg font-bold">My Growth Plans 🌱</h2>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {plans.map((p) => {
+              const progress = safeProgress(p)
+              return (
+                <li key={p.id}>
+                  <Link to={`/plan/${p.analysis_id}`} className="card flex flex-col gap-3 p-4 hover:border-fire-500/40 hover:bg-neutral-900">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold" dir="auto">{p.inputs?.targetRole || 'Growth Plan'}</p>
+                        <p className="text-xs text-neutral-500">
+                          {p.inputs?.weeks} weeks · {p.inputs?.hours} h/week · {new Date(p.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-sm font-bold text-fire-400">{progress}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+                      <div className="h-full rounded-full bg-gradient-to-r from-fire-500 to-ember-600" style={{ width: `${progress}%` }} />
+                    </div>
+                    <span className="text-xs font-semibold text-fire-400">Open plan →</span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
 
       <section className="fade-up">
         <h2 className="mb-3 text-lg font-bold">Your history</h2>
