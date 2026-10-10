@@ -2,7 +2,7 @@
 
 Get your CV roasted by AI (score, blunt feedback, ATS mismatch analysis, missing keywords), or build a CV from scratch by chatting with an AI career coach.
 
-**Stack:** Vite + React + Tailwind CSS v4 · Supabase (auth + database) · Gemini API (`gemini-flash-latest`) over REST. There is no separate backend.
+**Stack:** Vite + React + Tailwind CSS v4 · Supabase (auth + database) · Gemini API (`gemini-3.5-flash-lite`, no thinking, streamed chat) over REST. There is no separate backend.
 
 ## Features
 

@@ -11,7 +11,16 @@ import { LoadingPanel } from '../components/Spinner'
 
 const stripToken = (t) => t.replaceAll(READY_TOKEN, '').replace(/\n{3,}/g, '\n\n').trim()
 
-function Bubble({ role, children }) {
+// While streaming, the token can arrive in pieces ("READY_TO…"): hide a trailing partial token too.
+function visibleText(t) {
+  const s = stripToken(t)
+  for (let n = READY_TOKEN.length - 1; n >= 5; n--) {
+    if (s.endsWith(READY_TOKEN.slice(0, n))) return s.slice(0, -n).trimEnd()
+  }
+  return s
+}
+
+function Bubble({ role, streaming, children }) {
   const mine = role === 'user'
   return (
     <div className={`fade-up flex ${mine ? 'justify-end' : 'justify-start'}`}>
@@ -23,6 +32,7 @@ function Bubble({ role, children }) {
         }`}
       >
         {children}
+        {streaming && <span className="ms-0.5 inline-block animate-pulse text-fire-400" aria-hidden>▍</span>}
       </div>
     </div>
   )
@@ -45,7 +55,8 @@ export default function Generate() {
   const { user } = useAuth()
   const [messages, setMessages] = useState([{ role: 'assistant', content: COACH_GREETING }])
   const [input, setInput] = useState('')
-  const [typing, setTyping] = useState(false)
+  const [typing, setTyping] = useState(false) // a chat request is in flight
+  const [streamText, setStreamText] = useState('') // the reply received so far
   const [ready, setReady] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
@@ -61,14 +72,16 @@ export default function Generate() {
 
   useEffect(() => {
     const el = scrollRef.current
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-  }, [messages, typing])
+    // Jump (not glide) while text streams in, so the view keeps up with every chunk.
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: streamText ? 'auto' : 'smooth' })
+  }, [messages, typing, streamText])
 
   async function sendChat(history) {
     setTyping(true)
+    setStreamText('')
     setError('')
     try {
-      const reply = await chatGemini(history, COACH_SYSTEM_PROMPT)
+      const reply = await chatGemini(history, COACH_SYSTEM_PROMPT, (text) => setStreamText(visibleText(text)))
       const isReady = reply.includes(READY_TOKEN)
       const shown = stripToken(reply) || "Great, I have everything I need! Let's generate your CV. ✨"
       const next = [...history, { role: 'assistant', content: shown }]
@@ -81,6 +94,7 @@ export default function Generate() {
       setError(friendlyError(err))
       setLastFailed('chat')
     } finally {
+      setStreamText('')
       setTyping(false)
       inputRef.current?.focus()
     }
@@ -101,7 +115,7 @@ export default function Generate() {
     setError('')
     setSaveError('')
     try {
-      const result = await askGeminiJSON(generateCvPrompt(conversation), validateCv)
+      const result = await askGeminiJSON(generateCvPrompt(conversation), validateCv, { label: 'cv' })
       setCv(result)
       const { error: dbError } = await supabase.from('generated_cvs').insert({
         user_id: user.id,
@@ -180,10 +194,11 @@ export default function Generate() {
       </div>
 
       <div ref={scrollRef} className="card flex flex-1 flex-col gap-3 overflow-y-auto p-4">
-        {messages.map((m, i) => (
-          <Bubble key={i} role={m.role}>{m.content}</Bubble>
+        {/* The streaming reply sits at the next index, so the final message reuses its bubble (no flicker). */}
+        {[...messages, ...(streamText ? [{ role: 'assistant', content: streamText, streaming: true }] : [])].map((m, i) => (
+          <Bubble key={i} role={m.role} streaming={m.streaming}>{m.content}</Bubble>
         ))}
-        {typing && <TypingIndicator />}
+        {typing && !streamText && <TypingIndicator />}
         {error && <ErrorBox message={error} onRetry={retry} onDismiss={() => setError('')} />}
       </div>
 

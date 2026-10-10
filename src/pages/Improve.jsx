@@ -62,7 +62,7 @@ export default function Improve() {
     setResult(null)
     setAnalysisId(null)
     try {
-      const res = await askGeminiJSON(roastPrompt(cvText, job), validateRoast)
+      const res = await askGeminiJSON(roastPrompt(cvText, job), validateRoast, { label: 'roast' })
       setResult(res)
       const { data: saved, error: dbError } = await supabase
         .from('cv_analyses')

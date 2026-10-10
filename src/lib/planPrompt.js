@@ -153,3 +153,7 @@ export function guessTargetRole(jobDescription) {
   // "Senior Frontend Engineer - Remote (EU)" -> "Senior Frontend Engineer" (but keep "Full-stack developer")
   return line.replace(/\s+[-–—|·]\s.*$/, '').slice(0, 80) || line.slice(0, 80)
 }
+
+// Output token limit for a plan. 4096 is plenty for 2-4 weeks, but longer plans
+// get cut off (a 12-week plan failed at 4096), so scale the limit with the length.
+export const planMaxTokens = (weeks) => ({ 8: 8192, 12: 12288 })[Number(weeks)] || 4096

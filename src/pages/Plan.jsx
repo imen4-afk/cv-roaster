@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { askGeminiJSON, friendlyError } from '../lib/gemini'
 import { supabase } from '../lib/supabase'
 import { validateRoast } from '../lib/prompts'
-import { growthPlanPrompt, guessTargetRole, planProgress, validatePlan } from '../lib/planPrompt'
+import { growthPlanPrompt, guessTargetRole, planMaxTokens, planProgress, validatePlan } from '../lib/planPrompt'
 import { buildPlanIcs, downloadIcs } from '../lib/ics'
 import GrowthPlan from '../components/GrowthPlan'
 import PlanForm from '../components/PlanForm'
@@ -67,6 +67,7 @@ export default function Plan() {
           inputs,
         }),
         validatePlan,
+        { label: 'plan', maxOutputTokens: planMaxTokens(inputs.weeks) },
       )
       const record = { user_id: user.id, analysis_id: analysisId, inputs, plan, completed_tasks: [] }
       // One plan per analysis: regenerating replaces it (and resets progress).
