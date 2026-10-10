@@ -17,7 +17,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function callGemini(body) {
   if (!API_KEY) {
-    throw new GeminiError('Missing VITE_GEMINI_API_KEY in your .env file.', {
+    throw new GeminiError('Missing environment variables. Add them in Vercel Project Settings and redeploy. (VITE_GEMINI_API_KEY)', {
       retryable: false,
       kind: 'config',
     })

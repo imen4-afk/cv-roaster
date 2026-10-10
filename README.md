@@ -87,6 +87,10 @@ src/
 supabase/schema.sql
 ```
 
-## Deploying
+## Deploying to Vercel
 
-The app is a static single-page app, so you can deploy `dist/` to Vercel, Netlify, or Cloudflare Pages. Add the three environment variables there, and set up a rewrite of all routes to `/index.html` so deep links like `/cv/123` work.
+1. Import the GitHub repo in Vercel. It detects Vite automatically (build command `npm run build`, output directory `dist`).
+2. In **Project Settings → Environment Variables**, add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and `VITE_GEMINI_API_KEY`, then **redeploy**. Vite bakes these values in at build time, so a redeploy is required after any change.
+3. In Supabase, go to **Authentication → URL Configuration**. Set **Site URL** to your Vercel URL and add `https://<your-app>.vercel.app/**` to **Redirect URLs**, so confirmation emails link back to the deployed app.
+
+`vercel.json` rewrites every route to `index.html`, so refreshing on `/dashboard` or opening `/cv/123` directly works. If an environment variable is missing, the app shows an on-screen message naming it instead of a blank page.

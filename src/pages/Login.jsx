@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { supabase, supabaseConfigured } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import Spinner from '../components/Spinner'
 import ErrorBox from '../components/ErrorBox'
 
@@ -27,7 +27,12 @@ export default function Login() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
       } else {
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          // Confirmation emails link back to whichever domain the app runs on (localhost, Vercel preview, prod).
+          options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+        })
         if (error) throw error
         if (!data.session) {
           setInfo('Account created! Check your inbox to confirm your email, then sign in.')
@@ -55,10 +60,6 @@ export default function Login() {
         </h1>
         <p className="mt-2 text-neutral-400">Brutally honest feedback and an AI coach to build a better one.</p>
       </div>
-
-      {!supabaseConfigured && (
-        <ErrorBox message="Supabase is not configured. Copy .env.example to .env, fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server." />
-      )}
 
       <form onSubmit={submit} className="card fade-up flex flex-col gap-4 p-6">
         <div className="grid grid-cols-2 rounded-xl bg-neutral-950 p-1 text-sm">
