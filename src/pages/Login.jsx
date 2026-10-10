@@ -5,6 +5,9 @@ import { supabase } from '../lib/supabase'
 import Spinner from '../components/Spinner'
 import ErrorBox from '../components/ErrorBox'
 
+const CONFIRM_EMAIL_ON =
+  'This Supabase project still requires email confirmation. Turn off "Confirm email" in Supabase (Authentication → Sign In / Providers → Email), then sign up again.'
+
 export default function Login() {
   const { user, loading } = useAuth()
   const location = useLocation()
@@ -13,38 +16,31 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [info, setInfo] = useState('')
 
   if (!loading && user) return <Navigate to={location.state?.from || '/dashboard'} replace />
 
   async function submit(e) {
     e.preventDefault()
     setError('')
-    setInfo('')
     setBusy(true)
     try {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          // Confirmation emails link back to whichever domain the app runs on (localhost, Vercel preview, prod).
-          options: { emailRedirectTo: `${window.location.origin}/dashboard` },
-        })
+        // No confirmation email: with "Confirm email" off in Supabase, signUp returns a session right away.
+        const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
-        if (!data.session) {
-          setInfo('Account created! Check your inbox to confirm your email, then sign in.')
-          setMode('signin')
-        }
+        if (!data.session) throw new Error(CONFIRM_EMAIL_ON)
       }
-      // On success with a session, onAuthStateChange updates the context and <Navigate> redirects.
+      // On success, onAuthStateChange updates the context and <Navigate> redirects.
     } catch (err) {
       setError(
         err.message === 'Failed to fetch'
           ? "Couldn't reach the authentication server. Check your Supabase settings."
-          : err.message || 'Authentication failed.',
+          : /email not confirmed/i.test(err.message)
+            ? CONFIRM_EMAIL_ON
+            : err.message || 'Authentication failed.',
       )
     } finally {
       setBusy(false)
@@ -101,7 +97,6 @@ export default function Login() {
         </div>
 
         <ErrorBox message={error} />
-        {info && <p className="rounded-xl border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-300">{info}</p>}
 
         <button type="submit" className="btn-fire mt-1" disabled={busy}>
           {busy && <Spinner size="sm" className="!border-white !border-t-transparent" />}

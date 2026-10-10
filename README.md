@@ -6,7 +6,7 @@ Get your CV roasted by AI (score, blunt feedback, ATS mismatch analysis, missing
 
 ## Features
 
-- **Auth:** email + password sign up / sign in with Supabase. Every page except `/login` is protected.
+- **Auth:** email + password sign up / sign in with Supabase, with no confirmation email: you're logged in as soon as you sign up. Every page except `/login` is protected.
 - **`/dashboard`:** two entry points plus your history of roasts and generated CVs.
 - **`/improve`:** paste or upload a `.txt` CV, optionally add a target job description, and get:
   - an animated score gauge (red < 50, orange 50-74, green 75+)
@@ -35,7 +35,7 @@ Requires Node 20.19+ (or 22.12+).
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Go to **SQL Editor → New query**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql), and click **Run**. This creates the `cv_analyses` and `generated_cvs` tables with row-level security, so each user only sees their own data.
 3. Go to **Project Settings → API** and copy the **Project URL** and the **anon public** key.
-4. *(Optional, for quick local testing)* Go to **Authentication → Sign In / Providers → Email** and turn off **Confirm email**, so new accounts can sign in right away. If you leave it on, new users must click the confirmation link in their email before they can sign in.
+4. **Required:** go to **Authentication → Sign In / Providers → Email**, turn off **Confirm email**, and save. The app signs users in with just their email and password, without a confirmation email. If this setting stays on, sign-up shows a message asking you to turn it off.
 
 ### 3. Gemini
 
@@ -91,6 +91,4 @@ supabase/schema.sql
 
 1. Import the GitHub repo in Vercel. It detects Vite automatically (build command `npm run build`, output directory `dist`).
 2. In **Project Settings → Environment Variables**, add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and `VITE_GEMINI_API_KEY`, then **redeploy**. Vite bakes these values in at build time, so a redeploy is required after any change.
-3. In Supabase, go to **Authentication → URL Configuration**. Set **Site URL** to your Vercel URL and add `https://<your-app>.vercel.app/**` to **Redirect URLs**, so confirmation emails link back to the deployed app.
-
 `vercel.json` rewrites every route to `index.html`, so refreshing on `/dashboard` or opening `/cv/123` directly works. If an environment variable is missing, the app shows an on-screen message naming it instead of a blank page.
